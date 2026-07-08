@@ -1,1 +1,1 @@
-# 3D_Labyrithn_Game
+# 3D_Labyrinth_Game
