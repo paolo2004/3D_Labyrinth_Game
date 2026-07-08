@@ -1,0 +1,293 @@
+body {
+    margin: 0;
+    padding: 16px;
+    box-sizing: border-box;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    font-family: Arial, sans-serif;
+}
+
+#container {
+    position: relative;
+    width: min(1200px, calc(100vw - 460px));
+    aspect-ratio: 3 / 2;
+    border: 2px solid #cc2c2c;
+    perspective: 600px;
+    overflow: hidden;
+}
+
+#world{
+    position:absolute;
+    width: inherit;
+    height: inherit;
+    transform-style: preserve-3d;
+}
+
+.square{
+    position:absolute;
+}
+
+.menu{
+    position:absolute;
+    width: inherit;
+    height: inherit;
+    background-color: #abbd7d;
+    font-family: Arial, sans-serif;
+    display: none;
+}
+
+#menu1::before {
+    content: "3D Labyrinth";
+    position: absolute;
+    top: 140px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 54px;
+    font-weight: bold;
+    color: #f8fafc;
+}
+
+
+.button{
+    position:absolute;
+    width: 370px;
+    height: 70px;
+    left: 420px;
+    padding: 0;
+    background-color: #334155;
+    border: 2px solid #64748b;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.button:hover{
+    background-color: #4A90E2;
+    border-color: #93c5fd;
+    transform: scale(1.04);
+}
+
+#button1{
+    position:absolute;
+    top: 330px;
+    left: 450px;
+}
+
+#button2{
+    position:absolute;
+    top: 500px;
+    left: 450px;
+}
+
+#button3{
+    position:absolute;
+    top: 665px;
+    left: 420px;
+}
+
+#gameDescription {
+    position: absolute;
+    top: 130px;
+    left: 260px;
+    width: 680px;
+    margin: 0;
+    padding: 30px 42px;
+    box-sizing: border-box;
+    background-color: #111827;
+    border: 2px solid #64748b;
+    color: #e5e7eb;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+#gameDescription h2 {
+    margin: 0 0 18px 0;
+    color: #facc15;
+    font-size: 34px;
+}
+
+#gameDescription h3 {
+    margin: 20px 0 10px 0;
+    color: #93c5fd;
+    font-size: 22px;
+}
+
+#gameDescription p {
+    margin: 0 auto 12px auto;
+    max-width: 560px;
+}
+
+#gameDescription ul {
+    display: inline-block;
+    margin: 0 auto 12px auto;
+    padding-left: 22px;
+    text-align: left;
+}
+
+#gameDescription li {
+    margin-bottom: 6px;
+}
+
+#resultMessage {
+    position: absolute;
+    top: 240px;
+    left: 300px;
+    width: 600px;
+    padding: 36px;
+    box-sizing: border-box;
+    background-color: #111827;
+    color: #facc15;
+    border: 3px solid #facc15;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    display: none;
+    z-index: 20;
+}
+
+#resultMessage h2 {
+    margin: 0 0 28px 0;
+    font-size: 42px;
+}
+
+.win-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.win-buttons button {
+    width: 180px;
+    height: 54px;
+    border: 2px solid #64748b;
+    background-color: #334155;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.win-buttons button:hover {
+    background-color: #2563eb;
+    border-color: #93c5fd;
+}
+
+#legend {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 400px;
+    min-height: 400px;
+    padding: 18px;
+    box-sizing: border-box;
+    background-color: #1f2933;
+    color: white;
+    border: 2px solid #000000;
+    font-family: Arial, sans-serif;
+}
+
+#legend h2 {
+    margin: 0 0 16px 0;
+    font-size: 22px;
+}
+
+.legend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.key {
+    min-width: 88px;
+    padding: 5px 8px;
+    background-color: #374151;
+    border: 1px solid #6b7280;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#legend hr {
+    border: none;
+    border-top: 1px solid #4b5563;
+    margin: 16px 0;
+}
+
+.coin-dot,
+.key-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.coin-dot {
+    background-color: #f5c542;
+}
+
+.key-dot {
+    background-color: #7dd3fc;
+}
+
+#gameStatus {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 400px;
+    padding: 18px;
+    box-sizing: border-box;
+    background-color: #1f2933;
+    color: white;
+    border: 2px solid #000000;
+    font-family: Arial, sans-serif;
+}
+
+#gameStatus h2 {
+    margin: 0 0 16px 0;
+    font-size: 22px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 16px;
+}
+
+.status-item strong {
+    color: #facc15;
+    font-size: 20px;
+}
+
+#lifeMessage {
+    position: absolute;
+    top: 40px;
+    left: 300px;
+    width: 600px;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #111827;
+    color: #4ade80;
+    border: 3px solid #4ade80;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 26px;
+    font-weight: bold;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 30;
+}

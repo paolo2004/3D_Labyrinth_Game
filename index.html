@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>3D Game</title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="icon" href="data:,">
+    </head>
+
+    <body>
+        <main id="container" aria-label="3D labyrinth game">
+            <section id="world" aria-label="Game world"></section>
+
+            <nav id="menu1" class="menu" style="display: block;" aria-label="Main menu">
+                <button id="button1" class="button" type="button">Start Game</button>
+                <button id="button2" class="button" type="button">Game Description</button>
+            </nav>
+
+            <section id="menu2" class="menu" aria-label="Instructions">
+                <article id="gameDescription">
+                    <h2>Game Description</h2>
+
+                    <p>
+                        Explore the 3D labyrinth and find the win coin, <strong>Little Pony</strong>.
+                        Collecting Little Pony wins the game.
+                    </p>
+
+                    <h3>Items And Points</h3>
+                    <ul>
+                        <li>Key: 1 point</li>
+                        <li>Double key: 2 points</li>
+                        <li>Coin: 3 points</li>
+                    </ul>
+
+                    <h3>Lives And Traps</h3>
+                    <p>
+                        You start with 2 lives. Every 6 points gives you 1 extra life.
+                        If you touch a trap, you lose 1 life. If you lose all lives, the game is over.
+                    </p>
+                </article>
+
+                <button id="button3" class="button" type="button">Back</button>
+            </section>
+
+            <section id="resultMessage" style="display: none;" aria-label="Game result">
+                <h2 id="resultTitle">You won the game!</h2>
+
+                <div class="win-buttons">
+                    <button id="playAgainButton" type="button">Play Again</button>
+                    <button id="quitButton" type="button">Quit Game</button>
+                </div>
+            </section>
+            <section id="lifeMessage" style="display: none;" aria-label="Life bonus message">
+        
+            </section>
+        </main>
+
+        <aside id="sidebar">
+            <section id="legend" aria-label="Game legend">
+                <h2>Game Legend</h2>
+
+                <dl>
+                    <div class="legend-item">
+                        <dt class="key">Arrow Keys</dt>
+                        <dd>Move</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">Mouse</dt>
+                        <dd>Look around</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">Click</dt>
+                        <dd>Lock mouse</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">Escape</dt>
+                        <dd>Unlock mouse</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">Space</dt>
+                        <dd>Move Up</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">M</dt>
+                        <dd>Menu</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">B</dt>
+                        <dd>Move Down</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">P</dt>
+                        <dd>Speed boost</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="key">R</dt>
+                        <dd>Reset position</dd>
+                    </div>
+                </dl>
+
+                <hr>
+
+                <dl>
+                    <div class="legend-item">
+                        <dt><span class="coin-dot" aria-hidden="true"></span></dt>
+                        <dd>Coin</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt><span class="key-dot" aria-hidden="true"></span></dt>
+                        <dd>Key</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section id="gameStatus" aria-label="Game status">
+                <h2>Status</h2>
+
+                <div class="status-item">
+                    <span>Lives</span>
+                    <strong id="lifeStatus">2</strong>
+                </div>
+
+                <div class="status-item">
+                    <span>Points</span>
+                    <strong id="pointStatus">0</strong>
+                </div>
+
+                <div class="status-item">
+                    <span>Next Life</span>
+                    <strong id="nextLifeStatus">6 pts</strong>
+                </div>
+            </section>
+        </aside>
+
+        <script src="script.js"></script>
+        <script src="menu.js"></script>
+    </body>
+</html>
