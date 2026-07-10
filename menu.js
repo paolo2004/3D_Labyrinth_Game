@@ -65,5 +65,6 @@ playAgainButton.addEventListener("click", function() {
 quitButton.addEventListener("click", function() {
    document.getElementById("resultMessage").style.display = "none";
    menu1.style.display = "block";
+   document.exitPointerLock();
+   canlock = false;
 });
-

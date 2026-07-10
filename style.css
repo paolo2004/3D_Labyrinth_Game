@@ -6,12 +6,20 @@ body {
     gap: 18px;
     align-items: flex-start;
     font-family: Arial, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 #container {
     position: relative;
     width: min(1200px, calc(100vw - 460px));
+    min-width: 0;
     aspect-ratio: 3 / 2;
+    max-height: calc(100vh - 32px);
     border: 2px solid #cc2c2c;
     perspective: 600px;
     overflow: hidden;
@@ -19,9 +27,10 @@ body {
 
 #world{
     position:absolute;
-    width: inherit;
-    height: inherit;
+    width: 100%;
+    height: 100%;
     transform-style: preserve-3d;
+    transform-origin: 50% 50% 0;
 }
 
 .square{
@@ -30,8 +39,8 @@ body {
 
 .menu{
     position:absolute;
-    width: inherit;
-    height: inherit;
+    width: 100%;
+    height: 100%;
     background-color: #abbd7d;
     font-family: Arial, sans-serif;
     display: none;
@@ -40,21 +49,34 @@ body {
 #menu1::before {
     content: "3D Labyrinth";
     position: absolute;
-    top: 140px;
+    top: 17%;
     left: 0;
     width: 100%;
     text-align: center;
-    font-size: 54px;
+    font-size: clamp(34px, 4.5vw, 54px);
     font-weight: bold;
     color: #f8fafc;
+}
+
+#menu1::after {
+    content: "Please read the game description before starting.";
+    position: absolute;
+    top: 29%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: clamp(25px, 2.5vw, 24px);
+    color: #b50831;
+    font-weight: 600;
 }
 
 
 .button{
     position:absolute;
-    width: 370px;
-    height: 70px;
-    left: 420px;
+    width: min(370px, 78%);
+    height: clamp(58px, 8%, 70px);
+    left: 50%;
+    transform: translateX(-50%);
     padding: 0;
     background-color: #334155;
     border: 2px solid #64748b;
@@ -64,48 +86,61 @@ body {
     align-items: center;
     justify-content: center;
     font-family: Arial, sans-serif;
-    font-size: 24px;
+    font-size: clamp(18px, 2.3vw, 24px);
     font-weight: bold;
-    transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+    transition: background-color 0.2s, scale 0.2s, border-color 0.2s;
 }
 
 .button:hover{
     background-color: #4A90E2;
     border-color: #93c5fd;
-    transform: scale(1.04);
+    scale: 1.04;
 }
 
 #button1{
-    position:absolute;
-    top: 330px;
-    left: 450px;
+    top: 42%;
 }
 
 #button2{
-    position:absolute;
-    top: 500px;
-    left: 450px;
+    top: 56%;
 }
 
 #button3{
-    position:absolute;
-    top: 665px;
-    left: 420px;
+    top: 84%;
+}
+
+#gameInstructions {
+    position: absolute;
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(680px, 86%);
+    margin: 0;
+    padding: clamp(18px, 3vw, 30px) clamp(20px, 4vw, 42px);
+    box-sizing: border-box;
+    background-color: #111827;
+    border: 2px solid #64748b;
+    color: #c50d0d;
+    font-family: Arial, sans-serif;
+    font-size: clamp(14px, 1.6vw, 18px);
+    line-height: 1.5;
+    text-align: center;
 }
 
 #gameDescription {
     position: absolute;
-    top: 130px;
-    left: 260px;
-    width: 680px;
+    top: 14%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(680px, 86%);
     margin: 0;
-    padding: 30px 42px;
+    padding: clamp(18px, 3vw, 30px) clamp(20px, 4vw, 42px);
     box-sizing: border-box;
     background-color: #111827;
     border: 2px solid #64748b;
     color: #e5e7eb;
     font-family: Arial, sans-serif;
-    font-size: 18px;
+    font-size: clamp(14px, 1.6vw, 18px);
     line-height: 1.5;
     text-align: center;
 }
@@ -113,13 +148,13 @@ body {
 #gameDescription h2 {
     margin: 0 0 18px 0;
     color: #facc15;
-    font-size: 34px;
+    font-size: clamp(24px, 3vw, 34px);
 }
 
 #gameDescription h3 {
     margin: 20px 0 10px 0;
     color: #93c5fd;
-    font-size: 22px;
+    font-size: clamp(18px, 2vw, 22px);
 }
 
 #gameDescription p {
@@ -140,10 +175,11 @@ body {
 
 #resultMessage {
     position: absolute;
-    top: 240px;
-    left: 300px;
-    width: 600px;
-    padding: 36px;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(600px, 86%);
+    padding: clamp(22px, 4vw, 36px);
     box-sizing: border-box;
     background-color: #111827;
     color: #facc15;
@@ -156,22 +192,23 @@ body {
 
 #resultMessage h2 {
     margin: 0 0 28px 0;
-    font-size: 42px;
+    font-size: clamp(28px, 4vw, 42px);
 }
 
 .win-buttons {
     display: flex;
     justify-content: center;
     gap: 20px;
+    flex-wrap: wrap;
 }
 
 .win-buttons button {
-    width: 180px;
+    width: min(180px, 100%);
     height: 54px;
     border: 2px solid #64748b;
     background-color: #334155;
     color: white;
-    font-size: 18px;
+    font-size: clamp(16px, 2vw, 18px);
     font-weight: bold;
     cursor: pointer;
 }
@@ -181,11 +218,17 @@ body {
     border-color: #93c5fd;
 }
 
-#legend {
-    position: relative;
-    left: auto;
-    top: auto;
+#sidebar {
     width: 400px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 0 0 400px;
+}
+
+#legend {
+    width: 100%;
     min-height: 400px;
     padding: 18px;
     box-sizing: border-box;
@@ -242,10 +285,7 @@ body {
 }
 
 #gameStatus {
-    position: relative;
-    left: auto;
-    top: auto;
-    width: 400px;
+    width: 100%;
     padding: 18px;
     box-sizing: border-box;
     background-color: #1f2933;
@@ -274,9 +314,10 @@ body {
 
 #lifeMessage {
     position: absolute;
-    top: 40px;
-    left: 300px;
-    width: 600px;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(600px, 86%);
     padding: 20px;
     box-sizing: border-box;
     background-color: #111827;
@@ -284,10 +325,81 @@ body {
     border: 3px solid #4ade80;
     text-align: center;
     font-family: Arial, sans-serif;
-    font-size: 26px;
+    font-size: clamp(18px, 2.4vw, 26px);
     font-weight: bold;
     display: none;
     opacity: 0;
     transition: opacity 0.4s ease;
     z-index: 30;
+}
+
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+        padding: 10px;
+        gap: 12px;
+    }
+
+    #container {
+        width: 100%;
+        max-height: none;
+    }
+
+    #sidebar {
+        width: 100%;
+        flex: none;
+    }
+
+    #legend,
+    #gameStatus {
+        width: 100%;
+    }
+
+    #gameDescription {
+        top: 9%;
+        width: 90%;
+        max-height: 66%;
+        overflow: auto;
+    }
+
+    #button3 {
+        top: 86%;
+    }
+}
+
+@media (max-width: 520px) {
+    #container {
+        aspect-ratio: 4 / 3;
+    }
+
+    #menu1::before {
+        top: 12%;
+    }
+
+    #button1 {
+        top: 38%;
+    }
+
+    #button2 {
+        top: 52%;
+    }
+
+    .button {
+        width: 86%;
+        height: 54px;
+    }
+
+    #resultMessage {
+        top: 22%;
+        width: 92%;
+    }
+
+    .win-buttons button {
+        width: 100%;
+    }
+
+    .legend-item,
+    .status-item {
+        font-size: 14px;
+    }
 }

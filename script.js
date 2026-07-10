@@ -16,10 +16,10 @@ function player(x, y, z, rx, ry){
 
 var map = [
     // OUTER BOUNDARY
-    [0, 0, -1000, 0, 0, 0, 2000, 200, '#6e8291', 1],
-    [0, 0, 1000, 0, 180, 0, 2000, 200, 'pattern/back.png', 1],
-    [1000, 0, 0, 0, 90, 0, 2000, 200, 'pattern/right.jpeg', 1],
-    [-1000, 0, 0, 0, -90, 0, 2000, 200, '#76abc1', 1],
+    [0, 0, -1000, 0, 0, 0, 2000, 200, '#334155', 1],     // front wall - slate
+    [0, 0, 1000, 0, 180, 0, 2000, 200, '#475569', 1],    // back wall - blue gray
+    [1000, 0, 0, 0, 90, 0, 2000, 200, '#256D85', 1],     // right wall - teal blue
+    [-1000, 0, 0, 0, -90, 0, 2000, 200, '#7C3AED', 1],   // left wall - violet
     [0, 100, 0, 90, 0, 0, 2000, 2000, 'gifs/floor.gif', 1]
 ];
 
@@ -34,14 +34,13 @@ var images = [
 ];
 
 var wallSlots = [
-    [-750, -700], [-500, -700], [-250, -700], [0, -700], [250, -700], [500, -700], [750, -700],
-    [-750, -450], [-500, -450], [-250, -450], [0, -450], [250, -450], [500, -450], [750, -450],
-    [-750, -200], [-500, -200], [-250, -200], [0, -200], [250, -200], [500, -200], [750, -200],
-    [-750, 50], [-500, 50], [-250, 50], [0, 50], [250, 50], [500, 50], [750, 50],
-    [-750, 300], [-500, 300], [-250, 300], [0, 300], [250, 300], [500, 300], [750, 300],
-    [-750, 550], [-500, 550], [-250, 550], [0, 550], [250, 550], [500, 550], [750, 550],
-    [-750, 800], [-500, 800], [-250, 800], [0, 800], [250, 800], [500, 800], [750, 800],
-    [-875, -575], [875, -575], [-875, -75], [875, -75], [-875, 425], [875, 425], [-875, 800], [875, 800]
+    [-700, -700], [-350, -700], [0, -700], [350, -700], [700, -700],
+    [-700, -450], [-350, -450], [0, -450], [350, -450], [700, -450],
+    [-700, -200], [-350, -200], [0, -200], [350, -200], [700, -200],
+    [-700, 50], [-350, 50], [0, 50], [350, 50], [700, 50],
+    [-700, 300], [-350, 300], [0, 300], [350, 300], [700, 300],
+    [-700, 550], [-350, 550], [0, 550], [350, 550], [700, 550],
+    [-700, 800], [-350, 800], [0, 800], [350, 800], [700, 800]
 ];
 
 var itemSlots = [
@@ -138,13 +137,6 @@ var keys = [];
 
 var traps = [];
 
-var originalCoins = JSON.parse(JSON.stringify(coins));
-var originalWin = JSON.parse(JSON.stringify(win));
-var originalKeys = JSON.parse(JSON.stringify(keys));
-var originalTraps = JSON.parse(JSON.stringify(traps));
-
-
-
 //Variables for movement
 var pressLeft = 0;
 var pressRight = 0;
@@ -203,6 +195,8 @@ document.addEventListener("keydown", (event)=>{
         pressDown = - 1;
     }
     if (event.key == "m"){
+        document.exitPointerLock();
+        canlock = false;
         document.getElementById("menu1").style.display = "block";
     }
 })
@@ -245,6 +239,7 @@ container.onclick = function(){
 } 
 
 document.addEventListener("pointerlockchange", (event) =>{
+    //lock = !lock;
     lock = document.pointerLockElement === container;
 })
 
@@ -264,27 +259,6 @@ function resetPlayer(){
     pawn.rx = startRX;
     pawn.ry = startRY;
 }
-
-function resetSquares(squares, originalSquares, string){
-    for (let i = 0; i < originalSquares.length; i++){
-        squares[i] = originalSquares[i].slice();
-
-        let element = document.getElementById(string + i);
-        if (element) {
-            element.style.display = "block";
-        }
-    }
-}
-
-/***function resetGame(){
-    resetPlayer();
-    resetSquares(coins, originalCoins, "coin");
-    resetSquares(win, originalWin, "win");
-    resetSquares(walls, map, "wall");
-    resetSquares(keys, originalKeys, "key");
-    resetSquares(traps, originalTraps, "trap");
-    gameWon = false;
-}***/
 
 function resetGame(){
     resetPlayer();
@@ -353,8 +327,8 @@ function update(){
     let dz = (-(pressRight - pressLeft) * Math.sin(pawn.ry * deg) -
                 (pressForward - pressBack) * Math.cos(pawn.ry * deg))* speedMultiplier;
     let dy = (pressUp - pressDown) * speedMultiplier;
-    let drx = mouseY;
-    let dry = - mouseX;
+    let drx = mouseY * 0.5;
+    let dry = -mouseX * 0.5;
     mouseX = mouseY = 0; 
 
     // add movement to the coordinates
@@ -390,7 +364,8 @@ function update(){
     }
 
    //change coordinates of the world
-	world.style.transform ="translateZ(600px)" + "rotateX(" + (-pawn.rx) + "deg)" + 
+	world.style.transform ="translateZ(600px)" + 
+                            "rotateX(" + (-pawn.rx) + "deg)" + 
                             "rotateY(" + (-pawn.ry) + "deg)" +  
                             "translate3d(" + (-pawn.x) + "px," + (-pawn.y) + "px," + (-pawn.z) + "px)";
 }
@@ -413,8 +388,8 @@ function createSquare(squares, string){
             newElement.style.backgroundRepeat = "no-repeat";
         }
        newElement.style.opacity = squares[i][9];
-       newElement.style.transform = "translate3d(" + (600 - squares[i][6]/2 + squares[i][0]) + "px," + 
-                                    (400 - squares[i][7]/2 + squares[i][1]) + "px," +   
+       newElement.style.transform = "translate3d(" + ((container.clientWidth/2) - squares[i][6]/2 + squares[i][0]) + "px," + 
+                                    ((container.clientHeight/2) - squares[i][7]/2 + squares[i][1]) + "px," +   
                                     (squares[i][2]) + "px)" +
                                     "rotateX(" + squares[i][3] + "deg)" +
                                     "rotateY(" + squares[i][4] + "deg)" +
@@ -472,6 +447,8 @@ function interact(squares, string, objectSound){
         let is = (squares[i][6]) ;
         if (dis < is) {
             objectSound.play();
+            document.getElementById(string + i).style.display = "none";
+            squares[i][0] = 100000;
 
             if (string == "win") {
                 gameWon = true;
@@ -516,9 +493,6 @@ function interact(squares, string, objectSound){
             }
 
             updateStatus();
-
-            document.getElementById(string + i).style.display = "none";
-            squares[i][0] = 100000;
         }
     }
 }
@@ -529,8 +503,8 @@ function rotateItems(squares, string){
 
         if (element) {
             element.style.transform =
-                "translate3d(" + (600 - squares[i][6]/2 + squares[i][0]) + "px," +
-                                  (400 - squares[i][7]/2 + squares[i][1]) + "px," +
+                "translate3d(" + ((container.clientWidth / 2) - squares[i][6]/2 + squares[i][0]) + "px," +
+                                  ((container.clientHeight / 2) - squares[i][7]/2 + squares[i][1]) + "px," +
                                   squares[i][2] + "px)" +
                 "rotateX(" + squares[i][3] + "deg)" +
                 "rotateY(" + itemRotation + "deg)" +
@@ -544,21 +518,16 @@ function clearWorld(){
 }
 function repeat(){
     itemRotation += 1;
-    update();
 
-    if (gameWon || gameLost) {
-        return;
+    if (!gameWon && !gameLost) {
+        update();
+
+        interact(coins, "coin", coinSound);
+        interact(keys, "key", keySound);
+        interact(doubleCoins, "doubleCoin", coinSound);
+        interact(traps, "trap", trapSound);
+        interact(win, "win", winSound);
     }
-
-    interact(coins, "coin", coinSound);
-    if (gameWon || gameLost) return;
-    interact(keys, "key", keySound);
-    if (gameWon || gameLost) return;
-    interact(win, "win", winSound);
-    if (gameWon || gameLost) return;
-    interact(traps, "trap", trapSound);
-    if (gameWon || gameLost) return;
-    interact(doubleCoins, "doubleCoin", coinSound);
     rotateItems(coins, "coin");
     rotateItems(keys, "key");
     rotateItems(win, "win");
