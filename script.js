@@ -1,8 +1,21 @@
 //world variables
 var deg = Math.PI/180;
+
+const WORLD_SIZE = 2000;
+const HALF_WORLD = WORLD_SIZE / 2;
+const ROOM_HEIGHT = 260;
+const WALL_THICKNESS = 28;
+const ITEM_SIZE = 50;
+const EXIT_SIZE = 80;
+//a trap covers this share of a cell, so there is always floor left to squeeze past
+const TRAP_CELL_RATIO = 0.45;
+
+//the player always spawns in the first cell of the grid
+const SPAWN_CELL = [1, 1];
+
 var startX = 0;
 var startY = 0;
-var startZ = -900;
+var startZ = 0;
 var startRX = 0;
 var startRY = 180;
 
@@ -14,84 +27,272 @@ function player(x, y, z, rx, ry){
     this.ry = ry;
 }
 
+//the room around the labyrinth: four outer walls, a floor and a ceiling
 var map = [
-    // OUTER BOUNDARY
-    [0, 0, -1000, 0, 0, 0, 2000, 200, '#334155', 1],     // front wall - slate
-    [0, 0, 1000, 0, 180, 0, 2000, 200, '#475569', 1],    // back wall - blue gray
-    [1000, 0, 0, 0, 90, 0, 2000, 200, '#256D85', 1],     // right wall - teal blue
-    [-1000, 0, 0, 0, -90, 0, 2000, 200, '#7C3AED', 1],   // left wall - violet
-    [0, 100, 0, 90, 0, 0, 2000, 2000, 'gifs/floor.gif', 1]
+    // BACK / FRONT
+    [0, 0, -HALF_WORLD, 0, 0, 0,
+        WORLD_SIZE, ROOM_HEIGHT, "#172554", 1],
+
+    [0, 0, HALF_WORLD, 0, 180, 0,
+        WORLD_SIZE, ROOM_HEIGHT, "#172554", 1],
+    // SIDES
+    [HALF_WORLD, 0, 0, 0, 90, 0,
+        WORLD_SIZE, ROOM_HEIGHT, "#164e63", 1],
+    [-HALF_WORLD, 0, 0, 0, -90, 0,
+        WORLD_SIZE, ROOM_HEIGHT, "#164e63", 1],
+    // FLOOR
+    [0, ROOM_HEIGHT / 2, 0, 90, 0, 0,
+        WORLD_SIZE, WORLD_SIZE, "#050b18", 1],
+    // CEILING
+    [0, -ROOM_HEIGHT / 2, 0, 90, 0, 0,
+        WORLD_SIZE, WORLD_SIZE, "#01030d", 1]
 ];
 
-var images = [
-    [200,200,'pattern/back1.png'], // [width, height, image source]
-    [200,200,'pattern/back2.png'], 
-    [200,200,'pattern/back3.png'],
-    [500, 200, 'gifs/wall1.gif'],
-    [360, 200, 'gifs/wall2.gif'],
-    [400, 200, 'gifs/wall3.gif'],
-    [300, 200, 'gifs/wall4.gif']
+/*
+    Every level owns one fixed labyrinth. The same grid is rebuilt on every
+    restart, so a level can be learned by heart - only the items are reshuffled.
+
+    Grid format, (2N+1) x (2N+1) characters for an N x N labyrinth:
+        even row / even column -> corner post
+        even row / odd  column -> horizontal wall slot
+        odd  row / even column -> vertical wall slot
+        odd  row / odd  column -> walkable cell
+    A "#" means the slot is solid, a space means it is open. Every grid below
+    was checked with a flood fill: all cells are reachable from the spawn.
+*/
+const DIFFICULTIES = {
+    easy: {
+        label: "Easy",
+        blurb: "Wide corridors and many loops. Almost no dead ends.",
+        lives: 5,
+        keys: 3,
+        coins: 5,
+        doubleKeys: 4,
+        traps: 2,
+        firstExtraLife: 10,
+        extraLifeStep: 5,
+        maze: [
+            "#############",
+            "#   #       #",
+            "# # # # # # #",
+            "#   #   # # #",
+            "# ### ### # #",
+            "# #     #   #",
+            "# # # # ### #",
+            "#   # #   # #",
+            "### ##### # #",
+            "#   #   #   #",
+            "# ### # ### #",
+            "#     #     #",
+            "#############"
+        ]
+    },
+
+    medium: {
+        label: "Medium",
+        blurb: "Narrower lanes, a handful of dead ends to waste your time.",
+        lives: 3,
+        keys: 3,
+        coins: 3,
+        doubleKeys: 3,
+        traps: 4,
+        firstExtraLife: 15,
+        extraLifeStep: 6,
+        maze: [
+            "#################",
+            "#   #           #",
+            "# # # # ####### #",
+            "# # # # #       #",
+            "# # ### ### #####",
+            "# #   #   #     #",
+            "# ### ### ##### #",
+            "#     #   #     #",
+            "# ##### ### # ###",
+            "# #   # #   #   #",
+            "# # # # # ##### #",
+            "#   # #   #     #",
+            "##### ##### ### #",
+            "#   #     # #   #",
+            "# # ##### # # ###",
+            "# #         #   #",
+            "#################"
+        ]
+    },
+
+    hard: {
+        label: "Difficult",
+        blurb: "A true labyrinth: tight corridors, 13 dead ends, no loops.",
+        lives: 2,
+        keys: 4,
+        coins: 2,
+        doubleKeys: 2,
+        traps: 7,
+        firstExtraLife: 20,
+        extraLifeStep: 8,
+        maze: [
+            "#####################",
+            "# #     #   #       #",
+            "# ### ### # # ##### #",
+            "#   #     #   #     #",
+            "### # ######### #####",
+            "#   # #       #     #",
+            "# ### # ##### ##### #",
+            "#   # # #       #   #",
+            "### # # ####### # ###",
+            "#   #   #     # #   #",
+            "# ### ### ### ##### #",
+            "#   # #   #   #     #",
+            "### ### ### ### ### #",
+            "# # #   # # #   #   #",
+            "# # # ### # ### # ###",
+            "# #   #   #     #   #",
+            "# ####### ######### #",
+            "#           #       #",
+            "# ### ####### #######",
+            "#   #               #",
+            "#####################"
+        ]
+    }
+};
+
+var currentDifficulty = "medium";
+
+function level() {
+    return DIFFICULTIES[currentDifficulty];
+}
+
+function requiredKeys() {
+    return level().keys;
+}
+
+//distance between two grid slots, which is also half a cell
+function mazeStep(maze) {
+    return WORLD_SIZE / (maze.length - 1);
+}
+
+function gridToWorld(index, maze) {
+    return -HALF_WORLD + index * mazeStep(maze);
+}
+
+function mazeCells(maze) {
+    return (maze.length - 1) / 2;
+}
+
+//the exit always sits in the cell diagonally opposite the spawn
+function exitCell(maze) {
+    return [maze.length - 2, maze.length - 2];
+}
+
+function applyDifficulty(name) {
+    if (!DIFFICULTIES[name]) {
+        return;
+    }
+
+    currentDifficulty = name;
+
+    let maze = level().maze;
+    startX = gridToWorld(SPAWN_CELL[1], maze);
+    startZ = gridToWorld(SPAWN_CELL[0], maze);
+}
+
+var wallColors = [
+    "#1e3a5f",
+    "#164e63",
+    "#23395d",
+    "#2b3f56"
 ];
 
-var wallSlots = [
-    [-700, -700], [-350, -700], [0, -700], [350, -700], [700, -700],
-    [-700, -450], [-350, -450], [0, -450], [350, -450], [700, -450],
-    [-700, -200], [-350, -200], [0, -200], [350, -200], [700, -200],
-    [-700, 50], [-350, 50], [0, 50], [350, 50], [700, 50],
-    [-700, 300], [-350, 300], [0, 300], [350, 300], [700, 300],
-    [-700, 550], [-350, 550], [0, 550], [350, 550], [700, 550],
-    [-700, 800], [-350, 800], [0, 800], [350, 800], [700, 800]
-];
+//derived from the grid position instead of Math.random, so every wall keeps
+//its colour each time the level is rebuilt
+function wallColorFor(row, column) {
+    return wallColors[(row * 5 + column * 3) % wallColors.length];
+}
 
-var itemSlots = [
-    [-900, -850], [-450, -850], [450, -850], [900, -850],
-    [-600, -500], [200, -500], [600, -500],
-    [-900, -150], [-450, -150], [450, -150], [900, -150],
-    [-600, 150], [0, 150], [600, 150],
-    [-900, 450], [-450, 450], [450, 450], [900, 450],
-    [-600, 750], [0, 750], [600, 750]
-];
-
-function wallFromImage(x, z, image, vertical){
+function wallSegment(x, z, length, vertical, color) {
     return [
         x, 0, z,
         0, vertical ? 90 : 0, 0,
-        image[0], image[1],
-        image[2], 1
+        //reach into the corner posts so the joints look closed
+        length + WALL_THICKNESS,
+        ROOM_HEIGHT,
+        color,
+        1
     ];
 }
 
-function createRandomInnerWalls(amount){
-    let innerWalls = [];
-    let availableSlots = wallSlots.slice();
-    let maxWalls = Math.min(amount, availableSlots.length);
+function buildMazeWalls(maze) {
+    let segments = [];
+    let last = maze.length - 1;
+    let cellSize = mazeStep(maze) * 2;
 
-    for (let i = 0; i < maxWalls; i++){
-        let slotIndex = Math.floor(Math.random() * availableSlots.length);
-        let slot = availableSlots.splice(slotIndex, 1)[0];
-        let image = images[Math.floor(Math.random() * images.length)];
-        let vertical = i % 2 == 0;
+    //the border is skipped, the room box already closes the labyrinth off
+    for (let row = 1; row < last; row++) {
+        for (let column = 1; column < last; column++) {
+            if (maze[row][column] != "#") {
+                continue;
+            }
 
-        innerWalls.push(wallFromImage(slot[0], slot[1], image, vertical));
+            let horizontal = row % 2 == 0 && column % 2 == 1;
+            let vertical = row % 2 == 1 && column % 2 == 0;
+
+            //corner posts and cells carry no wall plane of their own
+            if (!horizontal && !vertical) {
+                continue;
+            }
+
+            segments.push(wallSegment(
+                gridToWorld(column, maze),
+                gridToWorld(row, maze),
+                cellSize,
+                vertical,
+                wallColorFor(row, column)
+            ));
+        }
     }
 
-    return innerWalls;
+    return segments;
 }
 
-function itemAt(x, z, image){
+//only walkable cells are offered, so an item can never end up inside a wall
+function buildItemSlots(maze, blockedCells) {
+    let slots = [];
+    let last = maze.length - 1;
+
+    for (let row = 1; row < last; row += 2) {
+        for (let column = 1; column < last; column += 2) {
+            if (maze[row][column] == "#") {
+                continue;
+            }
+
+            let blocked = blockedCells.some(function(cell){
+                return cell[0] == row && cell[1] == column;
+            });
+
+            if (!blocked) {
+                slots.push([gridToWorld(column, maze), gridToWorld(row, maze)]);
+            }
+        }
+    }
+
+    return slots;
+}
+
+function itemAt(x, z, image, size){
+    let itemSize = size || ITEM_SIZE;
+
     return [
         x, 30, z,
         0, 0, 0,
-        50, 50,
+        itemSize, itemSize,
         image, 1
     ];
 }
 
-function trapAt(x, z){
+function trapAt(x, z, size){
     return [
         x, 95, z,
         90, 0, 0,
-        120, 120,
+        size, size,
         '#D0021B', 0.8
     ];
 }
@@ -110,7 +311,7 @@ function createRandomItems(amount, image, availableSlots){
     return items;
 }
 
-function createRandomTraps(amount, availableSlots){
+function createRandomTraps(amount, availableSlots, size){
     let newTraps = [];
     let maxTraps = Math.min(amount, availableSlots.length);
 
@@ -118,24 +319,55 @@ function createRandomTraps(amount, availableSlots){
         let slotIndex = Math.floor(Math.random() * availableSlots.length);
         let slot = availableSlots.splice(slotIndex, 1)[0];
 
-        newTraps.push(trapAt(slot[0], slot[1]));
+        newTraps.push(trapAt(slot[0], slot[1], size));
     }
 
     return newTraps;
 }
 
-var innerWalls = [];
-var walls = map.concat(innerWalls);
+var walls = map.slice();
 
 var coins = [];
 
-var doubleCoins = [];   
+var doubleCoins = [];
 
 var win = [ ];
 
 var keys = [];
 
 var traps = [];
+
+//the labyrinth is fixed, only the items below it are placed anew
+function generateWorld() {
+    let current = level();
+    let maze = current.maze;
+    let exit = exitCell(maze);
+
+    walls = map.concat(buildMazeWalls(maze));
+
+    let availableItemSlots = buildItemSlots(maze, [SPAWN_CELL, exit]);
+
+    coins = createRandomItems(current.coins, "pattern/coin.png", availableItemSlots);
+    keys = createRandomItems(current.keys, "pattern/key.png", availableItemSlots);
+    doubleCoins = createRandomItems(current.doubleKeys, "pattern/double_key.png", availableItemSlots);
+    traps = createRandomTraps(current.traps, availableItemSlots,
+                              mazeStep(maze) * 2 * TRAP_CELL_RATIO);
+
+    //the exit keeps its corner so the way out can be memorised
+    win = [itemAt(gridToWorld(exit[1], maze), gridToWorld(exit[0], maze),
+                  "pattern/win.png", EXIT_SIZE)];
+}
+
+function renderWorld() {
+    createSquare(walls, "wall");
+    createSquare(coins, "coin");
+    createSquare(keys, "key");
+    createSquare(doubleCoins, "doubleCoin");
+    createSquare(win, "win");
+    createSquare(traps, "trap");
+}
+
+applyDifficulty(currentDifficulty);
 
 //Variables for movement
 var pressLeft = 0;
@@ -154,85 +386,75 @@ var container = document.getElementById("container");
 
 var coinSound = new Audio("sound/coin.wav");
 var keySound = new Audio("sound/key.wav");
+var doubleKeySound = new Audio("sound/double_key.wav");
 var winSound = new Audio("sound/win.wav");
 var trapSound = new Audio("sound/trap.wav");
+
+//movement rules (lives, keys and traps come from the chosen difficulty)
+const PLAYER_SIZE = 40;
+const POWER_MULTIPLIER = 3;
+const VERTICAL_SPEED = 2;
+const VERTICAL_LIMIT = ROOM_HEIGHT / 2 - 20;
+
 var canlock = false;
 var TimerGame;
 var gameWon = false;
 var gameLost = false;
-var lives = 2;
+var gameActive = false;
+var lives = level().lives;
 var points = 0;
-var nextLifePoints = 6;
+var keysCollected = 0;
+var nextLifePoints = level().firstExtraLife;
 var lifeMessageFadeTimer;
 var lifeMessageHideTimer;
 
 
-//if the key is pressed
-document.addEventListener("keydown", (event)=>{
+//returns true if the key is a game control, so the browser default can be blocked
+function setMovementKeyState(event, value) {
+    let key = event.key.toLowerCase();
 
-    if (event.key == "ArrowLeft"){
-       pressLeft = 1; 
+    if (key == "arrowleft")  { pressLeft = value;    return true; }
+    if (key == "arrowright") { pressRight = value;   return true; }
+    if (key == "arrowup")    { pressForward = value; return true; }
+    if (key == "arrowdown")  { pressBack = value;    return true; }
+    if (key == " ")          { pressUp = value;      return true; }
+    if (key == "b")          { pressDown = value;    return true; }
+    if (key == "p")          { pressPower = value;   return true; }
+    if (key == "r")          { released = value;     return true; }
+
+    return false;
+}
+
+function clearMovementKeys() {
+    pressLeft = 0;
+    pressRight = 0;
+    pressForward = 0;
+    pressBack = 0;
+    pressUp = 0;
+    pressDown = 0;
+    pressPower = 0;
+    released = 0;
+}
+
+document.addEventListener("keydown", (event)=>{
+    //arrows and space would scroll the page, but only block that during play
+    if (setMovementKeyState(event, 1) && gameActive) {
+        event.preventDefault();
     }
-    if (event.key == "ArrowRight"){
-       pressRight = 1; 
-    }
-    if (event.key == "ArrowUp"){
-       pressForward = 1; 
-    }
-    if (event.key == "ArrowDown"){
-       pressBack = 1; 
-    }
-    if(event.keyCode == 32){
-        pressUp = -1;
-    } 
-    if(event.key == "p"){
-        pressPower = 1;
-    }
-    if (event.key == "r"){
-        released = 1;
-    }
-    if (event.key == "b"){
-        pressDown = - 1;
-    }
-    if (event.key == "m"){
-        document.exitPointerLock();
-        canlock = false;
-        document.getElementById("menu1").style.display = "block";
+
+    if (event.key.toLowerCase() == "m") {
+        openMainMenu();
     }
 })
 
-//if the key is released
 document.addEventListener("keyup", (event)=>{
-    if (event.key == "ArrowLeft"){
-       pressLeft = 0; 
+    if (setMovementKeyState(event, 0) && gameActive) {
+        event.preventDefault();
     }
-    if (event.key == "ArrowRight"){
-       pressRight = 0; 
-    }
-    if (event.key == "ArrowUp"){
-       pressForward = 0;         
-    }
-    if (event.key == "ArrowDown"){
-       pressBack = 0; 
-    }
-    if(event.keyCode == 32){
-        pressUp = 0;
-    }
-    if (event.key == "p"){
-        pressPower = 0;
-    }
-    if (event.key == "r"){
-        released = 0;
-    }
-    if (event.key == "b"){
-        pressDown = 0;
-    }
-    
 })
 
 //if the mouse is pressed
-container.onclick = function(){
-    
+container.onclick = function(){ 
     if (canlock) {
         container.requestPointerLock();
     }
@@ -261,23 +483,42 @@ function resetPlayer(){
 }
 
 function resetGame(){
+    let current = level();
+
     resetPlayer();
+    clearMovementKeys();
+    hideLifeMessage();
     gameWon = false;
     gameLost = false;
-    lives = 2;
+    lives = current.lives;
     points = 0;
-    nextLifePoints = 6;
+    keysCollected = 0;
+    nextLifePoints = current.firstExtraLife;
     updateStatus();
 }
 
+//gates movement and shows the crosshair only while a round is running
+function setPlaying(active){
+    gameActive = active;
+
+    if (active) {
+        container.classList.add("playing");
+    }
+    else {
+        container.classList.remove("playing");
+    }
+}
+
 function updateStatus(){
+    document.getElementById("levelStatus").textContent = level().label;
     document.getElementById("lifeStatus").textContent = lives;
     document.getElementById("pointStatus").textContent = points;
+    document.getElementById("keyStatus").textContent = keysCollected + " / " + requiredKeys();
     document.getElementById("nextLifeStatus").textContent = nextLifePoints + " pts";
 }
 
 function isColliding(x, z) {
-    let playerSize = 40;
+    let playerSize = PLAYER_SIZE;
 
     for (let i = 0; i < walls.length; i++) {
         let wall = walls[i];
@@ -286,88 +527,88 @@ function isColliding(x, z) {
             continue;
         }
 
-        let wallX = wall[0];
-        let wallZ = wall[2];
-        let wallRY = wall[4];
-        let wallLength = wall[6];
-
-        // horizontal wall, along X axis
-        if (wallRY == 0 || wallRY == 180) {
-            if (
-                x > wallX - wallLength / 2 - playerSize &&
-                x < wallX + wallLength / 2 + playerSize &&
-                z > wallZ - playerSize &&
-                z < wallZ + playerSize
-            ) {
-                return true;
-            }
-        }
-
-        // vertical wall, along Z axis
-        if (wallRY == 90 || wallRY == -90) {
-            if (
-                x > wallX - playerSize &&
-                x < wallX + playerSize &&
-                z > wallZ - wallLength / 2 - playerSize &&
-                z < wallZ + wallLength / 2 + playerSize
-            ) {
-                return true;
-            }
-        }
+        if (isHorizontalWall(wall) && isHorizontalWallCollision(x, z, wall, playerSize)) return true;
+        if (isVerticalWall(wall) && isVerticalWallCollision(x, z, wall, playerSize)) return true;
     }
 
     return false;
 }
 
+function isHorizontalWall(wall) {
+    return wall[4] == 0 || wall[4] == 180;
+}
+
+function isVerticalWall(wall) {
+    return wall[4] == 90 || wall[4] == -90;
+}
+
+function isHorizontalWallCollision(x, z, wall, playerSize) {
+    return x > wall[0] - wall[6] / 2 - playerSize &&
+        x < wall[0] + wall[6] / 2 + playerSize &&
+        z > wall[2] - playerSize &&
+        z < wall[2] + playerSize;
+}
+
+function isVerticalWallCollision(x, z, wall, playerSize) {
+    return x > wall[0] - playerSize &&
+        x < wall[0] + playerSize &&
+        z > wall[2] - wall[6] / 2 - playerSize &&
+        z < wall[2] + wall[6] / 2 + playerSize;
+}
+
 function update(){
-    //count movement
-    let speedMultiplier = pressPower ? 5: 1; 
-    let dx = ((pressRight - pressLeft) * Math.cos(pawn.ry * deg) -
-                (pressForward - pressBack) * Math.sin(pawn.ry * deg))* speedMultiplier;
-    let dz = (-(pressRight - pressLeft) * Math.sin(pawn.ry * deg) -
-                (pressForward - pressBack) * Math.cos(pawn.ry * deg))* speedMultiplier;
-    let dy = (pressUp - pressDown) * speedMultiplier;
-    let drx = mouseY * 0.5;
-    let dry = -mouseX * 0.5;
-    mouseX = mouseY = 0; 
-
-    // add movement to the coordinates
-    let nextX = pawn.x + dx;
-    let nextY = pawn.y + dy;
-    let nextZ = pawn.z + dz;
-
-    if (!isColliding(nextX, pawn.z)) {
-        pawn.x = nextX;
-    }
-
-    if (!isColliding(pawn.x, nextZ)) {
-        pawn.z = nextZ;
-    }
-
-    pawn.y = nextY;
-
-    if (lock) {
-        pawn.rx = pawn.rx+ drx;
-        pawn.ry = pawn.ry + dry;
-
-        if (pawn.rx > 90) {
-            pawn.rx = 90;
-        }
-        if (pawn.rx < -90) {
-            pawn.rx = -90;
-        }
-    }
+    movePlayer(calculateMovement());
+    rotatePlayer();
 
     if (released == 1)
     {
         resetPlayer();
     }
 
-   //change coordinates of the world
-	world.style.transform ="translateZ(600px)" + 
-                            "rotateX(" + (-pawn.rx) + "deg)" + 
-                            "rotateY(" + (-pawn.ry) + "deg)" +  
-                            "translate3d(" + (-pawn.x) + "px," + (-pawn.y) + "px," + (-pawn.z) + "px)";
+    updateWorldTransform();
+}
+
+function calculateMovement() {
+    let speedMultiplier = pressPower ? POWER_MULTIPLIER : 1;
+
+    return {
+        dx: ((pressRight - pressLeft) * Math.cos(pawn.ry * deg) -
+            (pressForward - pressBack) * Math.sin(pawn.ry * deg)) * speedMultiplier,
+        //y grows downwards, so moving up means a negative dy
+        dy: (pressDown - pressUp) * VERTICAL_SPEED * speedMultiplier,
+        dz: (-(pressRight - pressLeft) * Math.sin(pawn.ry * deg) -
+            (pressForward - pressBack) * Math.cos(pawn.ry * deg)) * speedMultiplier
+    };
+}
+
+function movePlayer(movement) {
+    let nextX = pawn.x + movement.dx;
+    let nextY = pawn.y + movement.dy;
+    let nextZ = pawn.z + movement.dz;
+
+    if (!isColliding(nextX, pawn.z)) pawn.x = nextX;
+    if (!isColliding(pawn.x, nextZ)) pawn.z = nextZ;
+
+    //keep the player between ceiling and floor so walls cannot be flown over
+    pawn.y = Math.max(-VERTICAL_LIMIT, Math.min(VERTICAL_LIMIT, nextY));
+}
+
+function rotatePlayer() {
+    if (lock) {
+        pawn.rx += mouseY * 0.5;
+        pawn.ry -= mouseX * 0.5;
+        pawn.rx = Math.max(-90, Math.min(90, pawn.rx));
+    }
+
+    mouseX = 0;
+    mouseY = 0;
+}
+
+function updateWorldTransform() {
+    world.style.transform = "translateZ(600px)" +
+        "rotateX(" + (-pawn.rx) + "deg)" +
+        "rotateY(" + (-pawn.ry) + "deg)" +
+        "translate3d(" + (-pawn.x) + "px," + (-pawn.y) + "px," + (-pawn.z) + "px)";
 }
 
 function createSquare(squares, string){
@@ -375,7 +616,11 @@ function createSquare(squares, string){
 
         //create rectangle and styles
        let newElement = document.createElement("div");
-       newElement.className = "square";
+       newElement.className = "square " + string;
+       //the two flat planes of the room: y below zero is the ceiling
+       if (string == "wall" && squares[i][3] == 90){
+        newElement.classList.add(squares[i][1] < 0 ? "ceiling" : "floor")
+       }
        newElement.id = string + i;
        newElement.style.width = squares[i][6] + "px";
        newElement.style.height = squares[i][7] + "px";
@@ -388,8 +633,9 @@ function createSquare(squares, string){
             newElement.style.backgroundRepeat = "no-repeat";
         }
        newElement.style.opacity = squares[i][9];
-       newElement.style.transform = "translate3d(" + ((container.clientWidth/2) - squares[i][6]/2 + squares[i][0]) + "px," + 
-                                    ((container.clientHeight/2) - squares[i][7]/2 + squares[i][1]) + "px," +   
+       newElement.style.transform = "translate3d(" + 
+                                    (squares[i][0] - squares[i][6] / 2) + "px," +
+                                    (squares[i][1] - squares[i][7] / 2) + "px," +
                                     (squares[i][2]) + "px)" +
                                     "rotateX(" + squares[i][3] + "deg)" +
                                     "rotateY(" + squares[i][4] + "deg)" +
@@ -435,62 +681,158 @@ function showLifeMessage(message, color){
     }, 2200);
 }
 
+function hideLifeMessage(){
+    let lifeMessage = document.getElementById("lifeMessage");
+
+    clearTimeout(lifeMessageFadeTimer);
+    clearTimeout(lifeMessageHideTimer);
+
+    if (!lifeMessage) {
+        return;
+    }
+
+    lifeMessage.style.display = "none";
+    lifeMessage.style.opacity = "0";
+    lifeMessage.textContent = "";
+}
+
+//restarts the clip on every pickup and swallows the autoplay rejection
+function playSound(sound){
+    if (!sound) {
+        return;
+    }
+
+    sound.currentTime = 0;
+    let playing = sound.play();
+
+    if (playing && playing.catch) {
+        playing.catch(function(){});
+    }
+}
+
+function distanceToObject(object) {
+    return Math.sqrt(
+        Math.pow(pawn.x - object[0], 2) +
+        Math.pow(pawn.y - object[1], 2) +
+        Math.pow(pawn.z - object[2], 2)
+    );
+}
+
+//traps lie flat on the floor, so their height must not water down the check
+function groundDistanceToObject(object) {
+    return Math.sqrt(
+        Math.pow(pawn.x - object[0], 2) +
+        Math.pow(pawn.z - object[2], 2)
+    );
+}
+
+/*
+    Floating items are picked up from anywhere inside a sphere the size of the
+    sprite. A trap only bites where its red square actually lies, which leaves
+    room to squeeze past it even in the narrow corridors of the hard level.
+*/
+function isWithinReach(squares, index, string) {
+    let object = squares[index];
+
+    if (string == "trap") {
+        return groundDistanceToObject(object) < object[6] / 2;
+    }
+
+    return distanceToObject(object) < object[6];
+}
+
+function removeCollectedObject(string, index, object) {
+    let element = document.getElementById(string + index);
+
+    if (element) {
+        element.style.display = "none";
+    }
+
+    object[0] = 100000;
+}
+
+function addPointsFor(string) {
+    let pointValues = {
+        key: 1,
+        doubleCoin: 2,
+        coin: 3
+    };
+
+    points += pointValues[string] || 0;
+}
+
+function handleWin() {
+    gameWon = true;
+    canlock = false;
+    setPlaying(false);
+    document.exitPointerLock();
+    hideLifeMessage();
+    showResultMessage("You escaped the labyrinth!", "#facc15");
+}
+
+function handleTrap() {
+    lives--;
+    updateStatus();
+
+    if (lives <= 0) {
+        gameLost = true;
+        canlock = false;
+        setPlaying(false);
+        document.exitPointerLock();
+        hideLifeMessage();
+        showResultMessage("You lost the game!", "#f87171");
+    }
+    else {
+        showLifeMessage("You lost one life!", "#f87171");
+    }
+}
+
+function checkForExtraLife() {
+    let gainedLives = 0;
+
+    while (points >= nextLifePoints) {
+        lives++;
+        nextLifePoints += level().extraLifeStep;
+        gainedLives++;
+    }
+
+    if (gainedLives == 1) {
+        showLifeMessage("You gained one life!", "#34d399");
+    }
+    else if (gainedLives > 1) {
+        showLifeMessage("You gained " + gainedLives + " lives!", "#34d399");
+    }
+}
+
 function interact(squares, string, objectSound){
     if (gameWon || gameLost) {
         return;
     }
 
     for (let i = 0; i < squares.length; i++){
-        let dis = Math.sqrt(Math.pow((pawn.x - squares[i][0]), 2) + 
-                  Math.pow((pawn.y - squares[i][1]), 2) + 
-                  Math.pow((pawn.z - squares[i][2]), 2));
-        let is = (squares[i][6]) ;
-        if (dis < is) {
-            objectSound.play();
-            document.getElementById(string + i).style.display = "none";
-            squares[i][0] = 100000;
+        if (isWithinReach(squares, i, string)) {
+            //the locked exit must stay in the world, so check before collecting
+            if (string == "win" && keysCollected < requiredKeys()) {
+                showLifeMessage("Exit locked! Find all " + requiredKeys() + " keys.", "#7dd3fc");
+                return;
+            }
+
+            playSound(objectSound);
+            removeCollectedObject(string, i, squares[i]);
 
             if (string == "win") {
-                gameWon = true;
-                canlock = false;
-                document.exitPointerLock();
-                showResultMessage("You won the game!", "#facc15");
+                handleWin();
                 return;
             }
             else if (string == "trap") {
-                lives--;
-                updateStatus();
-
-                document.getElementById(string + i).style.display = "none";
-                squares[i][0] = 100000;
-                if (lives <= 0) {
-                    gameLost = true;
-                    canlock = false;
-                    document.exitPointerLock();
-                    showResultMessage("You lost the game!", "#f87171");
-                }
-                else {
-                    showLifeMessage("You lost one life!", "#f87171");
-                }
+                handleTrap();
                 return;
             }
-            if (string == "key") {
-                points = points + 1;
+            if ( string == "key") {
+                keysCollected++;
             }
-
-            if (string == "doubleCoin") {
-                points = points + 2;
-            }
-
-            if (string == "coin") {
-                points = points + 3;
-            }
-
-            if (points >= nextLifePoints) {
-                lives = lives + 1;
-                nextLifePoints = nextLifePoints + 6;
-                showLifeMessage("You gained one life!", "#10b981");
-            }
+            addPointsFor(string);
+            checkForExtraLife();
 
             updateStatus();
         }
@@ -503,8 +845,8 @@ function rotateItems(squares, string){
 
         if (element) {
             element.style.transform =
-                "translate3d(" + ((container.clientWidth / 2) - squares[i][6]/2 + squares[i][0]) + "px," +
-                                  ((container.clientHeight / 2) - squares[i][7]/2 + squares[i][1]) + "px," +
+                "translate3d(" + (squares[i][0] - squares[i][6] / 2) + "px," +
+                                 (squares[i][1] - squares[i][7] / 2) + "px," +
                                   squares[i][2] + "px)" +
                 "rotateX(" + squares[i][3] + "deg)" +
                 "rotateY(" + itemRotation + "deg)" +
@@ -519,12 +861,13 @@ function clearWorld(){
 function repeat(){
     itemRotation += 1;
 
-    if (!gameWon && !gameLost) {
+    //gameActive is false while a menu is open, so the player cannot move behind it
+    if (gameActive && !gameWon && !gameLost) {
         update();
 
         interact(coins, "coin", coinSound);
         interact(keys, "key", keySound);
-        interact(doubleCoins, "doubleCoin", coinSound);
+        interact(doubleCoins, "doubleCoin", doubleKeySound);
         interact(traps, "trap", trapSound);
         interact(win, "win", winSound);
     }
@@ -533,3 +876,5 @@ function repeat(){
     rotateItems(win, "win");
     rotateItems(doubleCoins, "doubleCoin");
 }
+
+updateStatus();

@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>3D Game</title>
+        <title>3D Labyrinth</title>
         <link rel="stylesheet" href="style.css">
         <link rel="icon" href="data:,">
     </head>
@@ -12,123 +12,96 @@
         <main id="container" aria-label="3D labyrinth game">
             <section id="world" aria-label="Game world"></section>
 
-            <nav id="menu1" class="menu" style="display: block;" aria-label="Main menu">
-                <button id="button1" class="button" type="button">Start Game</button>
-                <button id="button2" class="button" type="button">Game Description</button>
+            <div id="vignette" aria-hidden="true"></div>
+            <div id="crosshair" aria-hidden="true"></div>
+
+            <nav id="menu1" class="menu open" aria-label="Main menu">
+                <div class="menu-panel">
+                    <h1 class="game-title">3D Labyrinth</h1>
+                    <p class="game-tagline">Explore &middot; Collect &middot; Escape</p>
+
+                    <h2 class="menu-heading">Choose your difficulty</h2>
+                    <div id="difficultyList" class="difficulty-list"></div>
+
+                    <button id="button2" class="button button-ghost" type="button">How To Play</button>
+                </div>
             </nav>
 
             <section id="menu2" class="menu" aria-label="Instructions">
-                <article id="gameDescription">
-                    <h2>Game Description</h2>
+                <div class="menu-panel menu-panel-wide">
+                    <article id="gameDescription">
+                        <h2>How To Play</h2>
 
-                    <p>
-                        Explore the 3D labyrinth and find the win coin, <strong>Little Pony</strong>.
-                        Collecting Little Pony wins the game.
-                    </p>
+                        <p>
+                            Every level is a <strong>fixed labyrinth</strong>, so you can learn
+                            your way around it. Collect <strong>every key</strong> to unlock the
+                            exit, then reach the win coin, <strong>Little Pony</strong>, in the
+                            far corner. Touching the exit before you hold all keys leaves it
+                            locked, so come back once you have them.
+                        </p>
 
-                    <h3>Items And Points</h3>
-                    <ul>
-                        <li>Key: 1 point</li>
-                        <li>Double key: 2 points</li>
-                        <li>Coin: 3 points</li>
-                    </ul>
+                        <h3>Items And Points</h3>
+                        <ul class="item-list">
+                            <li>
+                                <span class="dot key-dot" aria-hidden="true"></span>
+                                <strong>Key</strong> &mdash; 1 point, and one of the keys you need
+                            </li>
+                            <li>
+                                <span class="dot double-dot" aria-hidden="true"></span>
+                                <strong>Double key</strong> &mdash; 2 points, bonus only
+                            </li>
+                            <li>
+                                <span class="dot coin-dot" aria-hidden="true"></span>
+                                <strong>Coin</strong> &mdash; 3 points, bonus only
+                            </li>
+                        </ul>
 
-                    <h3>Lives And Traps</h3>
-                    <p>
-                        You start with 2 lives. Every 6 points gives you 1 extra life.
-                        If you touch a trap(red Square on the ground), you lose 1 life. 
-                        If you lose all lives, the game is over.
-                    </p>
-                </article>
+                        <p class="note">
+                            Items and traps are placed anew every round, so the same labyrinth
+                            never plays the same way twice.
+                        </p>
 
-                <button id="button3" class="button" type="button">Back</button>
+                        <h3>Lives And Traps</h3>
+                        <p>
+                            Points earn extra lives. Touching a trap &mdash; the glowing red
+                            square on the floor &mdash; costs one life, and the trap then
+                            disappears. At zero lives the game is over.
+                        </p>
+
+                        <h3>Difficulty Levels</h3>
+                        <div id="difficultyTable" class="difficulty-table"></div>
+                    </article>
+
+                    <button id="button3" class="button button-ghost" type="button">Back</button>
+                </div>
             </section>
 
             <section id="resultMessage" style="display: none;" aria-label="Game result">
-                <h2 id="resultTitle">You won the game!</h2>
+                <h2 id="resultTitle">You escaped the labyrinth!</h2>
 
                 <div class="win-buttons">
                     <button id="playAgainButton" type="button">Play Again</button>
-                    <button id="quitButton" type="button">Quit Game</button>
+                    <button id="quitButton" type="button">Main Menu</button>
                 </div>
             </section>
+
             <section id="lifeMessage" style="display: none;" aria-label="Life bonus message">
-        
+
             </section>
         </main>
 
         <aside id="sidebar">
-            <section id="legend" aria-label="Game legend">
-                <h2>Game Legend</h2>
-
-                <dl>
-                    <div class="legend-item">
-                        <dt class="key">Arrow Keys</dt>
-                        <dd>Move</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">Mouse</dt>
-                        <dd>Look around</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">Click</dt>
-                        <dd>Lock mouse</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">Escape</dt>
-                        <dd>Unlock mouse</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">Space</dt>
-                        <dd>Move Up</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">M</dt>
-                        <dd>Menu</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">B</dt>
-                        <dd>Move Down</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">P</dt>
-                        <dd>Speed boost</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt class="key">R</dt>
-                        <dd>Reset position</dd>
-                    </div>
-                </dl>
-
-                <hr>
-
-                <dl>
-                    <div class="legend-item">
-                        <dt><span class="coin-dot" aria-hidden="true"></span></dt>
-                        <dd>Coin</dd>
-                    </div>
-
-                    <div class="legend-item">
-                        <dt><span class="key-dot" aria-hidden="true"></span></dt>
-                        <dd>Key</dd>
-                    </div>
-                </dl>
-            </section>
-
             <section id="gameStatus" aria-label="Game status">
                 <h2>Status</h2>
 
                 <div class="status-item">
+                    <span>Level</span>
+                    <strong id="levelStatus">Medium</strong>
+                </div>
+
+                <div class="status-item">
                     <span>Lives</span>
-                    <strong id="lifeStatus">2</strong>
+                    <strong id="lifeStatus">3</strong>
                 </div>
 
                 <div class="status-item">
@@ -137,9 +110,89 @@
                 </div>
 
                 <div class="status-item">
-                    <span>Next Life</span>
-                    <strong id="nextLifeStatus">6 pts</strong>
+                    <span>Keys</span>
+                    <strong id="keyStatus">0 / 3</strong>
                 </div>
+
+                <div class="status-item">
+                    <span>Next Life</span>
+                    <strong id="nextLifeStatus">15 pts</strong>
+                </div>
+            </section>
+
+            <section id="legend" aria-label="Game legend">
+                <h2>Game Legend</h2>
+
+                <dl>
+                    <div class="legend-item">
+                        <dt class="keycap">Arrow Keys</dt>
+                        <dd>Move</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">Mouse</dt>
+                        <dd>Look around</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">Click</dt>
+                        <dd>Lock mouse</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">Escape</dt>
+                        <dd>Unlock mouse</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">Space</dt>
+                        <dd>Move Up</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">B</dt>
+                        <dd>Move Down</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">P</dt>
+                        <dd>Speed boost</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">R</dt>
+                        <dd>Back to spawn</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt class="keycap">M</dt>
+                        <dd>Menu</dd>
+                    </div>
+                </dl>
+
+                <hr>
+
+                <dl>
+                    <div class="legend-item">
+                        <dt><span class="dot coin-dot" aria-hidden="true"></span></dt>
+                        <dd>Coin &mdash; 3 points</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt><span class="dot key-dot" aria-hidden="true"></span></dt>
+                        <dd>Key &mdash; unlocks the exit</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt><span class="dot double-dot" aria-hidden="true"></span></dt>
+                        <dd>Double key &mdash; 2 points</dd>
+                    </div>
+
+                    <div class="legend-item">
+                        <dt><span class="dot trap-dot" aria-hidden="true"></span></dt>
+                        <dd>Trap &mdash; costs a life</dd>
+                    </div>
+                </dl>
             </section>
         </aside>
 
